@@ -11,6 +11,7 @@ from locks import release, require_lock
 from models import SampleIn
 from validators import (
     adjudicate_exceed,
+    can_readjudicate,
     metric_summary,
     validate_flow_cap,
     validate_metrics_nonneg,
@@ -49,6 +50,7 @@ def list_samples(authorization: AuthHeader = None, status: str | None = None):
         for r in rows:
             d = dict(r)
             d["metrics"] = json.loads(d["metrics"] or "{}")
+            d["can_re_adjudicate"] = can_readjudicate(d["status"])
             items.append(d)
         return {"items": items}
 
@@ -70,6 +72,7 @@ def get_sample(sample_id: int, authorization: AuthHeader = None):
             raise HTTPException(404, "采样批次不存在")
         data = dict(row)
         data["metrics"] = json.loads(data["metrics"] or "{}")
+        data["can_re_adjudicate"] = can_readjudicate(data["status"])
         holds = conn.execute(
             "SELECT * FROM exceed_holds WHERE sample_id=? ORDER BY id DESC",
             (sample_id,),

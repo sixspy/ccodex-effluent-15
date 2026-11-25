@@ -6,7 +6,7 @@ import json
 from fastapi import APIRouter, HTTPException
 
 from auth import AuthHeader, require_user
-from validators import validate_permit_match
+from validators import can_readjudicate, validate_permit_match
 
 router = APIRouter(tags=["reconcile"])
 
@@ -74,6 +74,7 @@ def _reconcile_permit(conn, permit_code: str) -> dict:
                 "metrics": metrics,
                 "flow_m3h": s["flow_m3h"],
                 "matched": ok,
+                "can_re_adjudicate": can_readjudicate(s["status"]),
             }
         )
     seal_rows = conn.execute(
@@ -123,6 +124,7 @@ def proof_sample(sample_code: str, authorization: AuthHeader = None):
             "released": any(r["status"] == "已准排" for r in releases),
             "sealed": any(s["status"] == "已封批" for s in seals),
             "exceed_closed": len(open_holds) == 0 and (len(closed) > 0 or sample["status"] != "旁路挂起"),
+            "can_re_adjudicate": can_readjudicate(sample["status"]),
             "holds": [dict(h) for h in holds],
             "releases": [dict(r) for r in releases],
             "seals": [dict(s) for s in seals],

@@ -37,13 +37,14 @@ def create_release(body: ReleaseIn, authorization: AuthHeader = None):
             ).fetchone()
             if not sample:
                 raise HTTPException(404, "采样批次不存在")
-            validate_sample_releasable(sample["status"])
             open_hold = conn.execute(
                 "SELECT id FROM exceed_holds WHERE sample_id=? AND status='开放'",
                 (body.sample_id,),
             ).fetchone()
             if open_hold:
+                # 旁路挂起灰态：开放挂起未驳回回写前禁止准排
                 raise HTTPException(400, "仍有开放超标挂起，禁止准排")
+            validate_sample_releasable(sample["status"])
             existing = conn.execute(
                 "SELECT id FROM discharge_releases WHERE sample_id=? AND status='已准排'",
                 (body.sample_id,),

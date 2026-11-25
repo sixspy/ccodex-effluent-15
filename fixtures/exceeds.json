@@ -8,5 +8,16 @@
     "status": "开放",
     "opened_at": "2026-11-18T09:00:00",
     "note": "入库自动挂起"
+  },
+  {
+    "sample_code": "SM-EX-P15",
+    "hold_key": "EX-P15-回态",
+    "exceed_metric": "COD",
+    "measured": 66.0,
+    "limit_value": 50.0,
+    "status": "已驳回",
+    "opened_at": "2026-11-22T08:05:00",
+    "closed_at": "2026-11-22T09:10:00",
+    "note": "预置缺陷夹具：驳回只关挂起，主批态正式列未回写仍停旁路挂起"
   }
 ]

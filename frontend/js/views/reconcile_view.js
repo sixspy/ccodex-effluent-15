@@ -14,6 +14,23 @@ export const reconcileViewTemplate = `
           </tr>
         </tbody>
       </table>
+      <h3 style="margin-top:1rem">采样行 · 可重裁同态（驳回回写已裁定后该键删除）</h3>
+      <table>
+        <thead><tr><th>许可</th><th>采样</th><th>正式批态</th><th>可重裁</th></tr></thead>
+        <tbody>
+          <template v-for="r in reconAllItems" :key="r.permit_code">
+            <tr v-for="s in r.samples" :key="r.permit_code + s.sample_code">
+              <td>{{ r.permit_code }}</td>
+              <td>{{ s.sample_code }}</td>
+              <td :class="sampleClass(s.status)">{{ s.status }}</td>
+              <td>
+                <span v-if="s.can_re_adjudicate" class="warn">可重裁</span>
+                <span v-else class="pass">—</span>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
     </div>
     <div class="panel">
       <h3>单许可 / 采样证明</h3>

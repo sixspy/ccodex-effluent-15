@@ -442,6 +442,40 @@ def seed_lineage(conn: sqlite3.Connection) -> None:
         )
 
 
+def repair_reject_state_writeback(conn: sqlite3.Connection) -> int:
+    """驳回回态偏航修复（甲路径，当班封死）。
+
+    预置夹具 EX-P15-回态 复现缺陷：exceed_holds 已驳回而 sample_batches 正式
+    状态列仍停旁路挂起。驳回动作与主批态回写不得混用——本修复按甲路径把
+    正式批态同事务回写为已裁定、清除旁路标记，并留审计说明。
+    返回修复批点数。
+    """
+    rows = conn.execute(
+        """SELECT s.id, s.sample_code FROM sample_batches s
+           WHERE s.status='旁路挂起'
+             AND EXISTS (SELECT 1 FROM exceed_holds h
+                         WHERE h.sample_id=s.id AND h.status='已驳回')"""
+    ).fetchall()
+    for row in rows:
+        conn.execute(
+            """UPDATE sample_batches SET status='已裁定', adjudicated_at=?
+               WHERE id=? AND status='旁路挂起'""",
+            (now_iso(), row["id"]),
+        )
+        write_audit(
+            conn,
+            "system",
+            "reject_state_writeback",
+            row["sample_code"],
+            {
+                "path": "甲",
+                "reason": "驳回回态偏航：挂起已闭而主态未回，同事务补回已裁定并清旁路标记",
+                "fixture_key": "EX-P15-回态",
+            },
+        )
+    return len(rows)
+
+
 def init_db() -> None:
     with connect() as conn:
         conn.executescript(SCHEMA)
@@ -451,6 +485,7 @@ def init_db() -> None:
         seed_permits(conn)
         seed_samples(conn)
         seed_exceeds(conn)
+        repair_reject_state_writeback(conn)
         seed_releases(conn)
         seed_seals(conn)
         seed_lineage(conn)

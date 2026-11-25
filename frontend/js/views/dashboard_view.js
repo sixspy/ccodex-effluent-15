@@ -11,7 +11,7 @@ export const dashboardViewTemplate = `
     <div class="stat"><div class="n">{{ dash.discharge_releases || 0 }}</div><div class="l">已准排</div></div>
     <div class="stat"><div class="n">{{ dash.discharge_seals || 0 }}</div><div class="l">已封批</div></div>
     <div class="stat"><div class="n">{{ dash.permits || 0 }}</div><div class="l">许可册</div></div>
-    <div class="stat"><div class="n">{{ dash.side_pending || 0 }}</div><div class="l">旁路挂起</div></div>
+    <div class="stat"><div class="n">{{ dash.side_pending || 0 }}</div><div class="l">旁路挂起（驳回回写已裁定后递减）</div></div>
   </div>
     <div class="panel">
       <h3>产品骨架</h3>

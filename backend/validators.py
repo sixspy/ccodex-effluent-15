@@ -71,3 +71,12 @@ def validate_sample_sealable(status: str) -> None:
 
 def metric_summary(metrics: dict) -> str:
     return format_triplet(metrics)
+
+
+def can_readjudicate(status: str) -> bool:
+    """可重裁口径：仅正式批态列仍停旁路挂起时为真。
+
+    乙路径影子回态草案已封死，读侧只认 sample_batches.status 正式列；
+    驳回同事务回写已裁定后，可重裁键即删除（False）。
+    """
+    return status == "旁路挂起"

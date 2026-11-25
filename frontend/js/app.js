@@ -78,6 +78,9 @@ createApp({
     const releasableSamples = computed(() =>
       samples.value.filter((s) => s.status === "已裁定")
     );
+    const pendingSamples = computed(() =>
+      samples.value.filter((s) => s.status === "旁路挂起")
+    );
     const sealableSamples = computed(() =>
       samples.value.filter((s) => ["已裁定", "已准排"].includes(s.status))
     );
@@ -97,6 +100,15 @@ createApp({
     function fmtMetrics(m) {
       if (!m) return "—";
       return `COD=${m.cod} 氨氮=${m.nh3n} 总磷=${m.tp}`;
+    }
+    // 五处同态：主批态只认采样批次正式状态列，驳回回写后全页一致翻转
+    function mainStatusOf(hold) {
+      const s = samples.value.find((x) => x.sample_code === hold.sample_code);
+      return s ? s.status : "—";
+    }
+    function canReAdjudicateOf(hold) {
+      const s = samples.value.find((x) => x.sample_code === hold.sample_code);
+      return s ? s.can_re_adjudicate === true : false;
     }
 
     async function flash(fn) {
@@ -164,6 +176,9 @@ createApp({
       }));
     }
     async function closeExceed(id) { await flash(() => api.closeExceed({ hold_id: id, note: "页面闭环" })); }
+    async function rejectExceed(id) {
+      await flash(() => api.rejectExceed({ hold_id: id, note: "页面驳回：同事务回写主批态已裁定" }));
+    }
     async function createRelease() { await flash(() => api.createRelease(releaseForm.value)); }
     async function createSeal() {
       await flash(() => api.createSeal({
@@ -223,9 +238,11 @@ createApp({
       reconOne, reconAllItems, proofOne, reconCode, proofCode,
       plantForm, outfallForm, sampleForm, releaseForm, sealForm, permitForm,
       lineageForm, labForm, sludgeForm, releasableSamples, sealableSamples,
+      pendingSamples,
       login, logout, refresh, statusClass, sampleClass, fmtMetrics,
+      mainStatusOf, canReAdjudicateOf,
       loadPlant, loadSample, createPlant, createOutfall, createSample,
-      closeExceed, createRelease, createSeal, createPermit, createLineage,
+      closeExceed, rejectExceed, createRelease, createSeal, createPermit, createLineage,
       loadReconcile, loadReconcileOne, loadProof, enqueueLab, enqueueSludge,
     };
   },
